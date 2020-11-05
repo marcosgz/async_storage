@@ -22,7 +22,57 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+** Idea about the API of this gem. Update accordingly before release it
+
+Define global configurations
+```ruby
+# Configurations
+AsyncStorage.configuration do |config|
+  config.backend = AsyncStorage::Backend::Faktory
+  config.respository = AsyncStorage::Repository
+  config.expires_in = 3_600
+end
+```
+
+Useful methods to get, set and check data
+
+```ruby
+AsyncStorage.get(klass, 'arg')
+AsyncStorage.set(klass, 'arg') { value }
+AsyncStorage.delete(klass, 'arg')
+AsyncStorage.exist?(klass, 'arg')
+AsyncStorage.invalidate(klass, 'arg')
+```
+
+```ruby
+# app/resolvers/user_tweet_resolver.rb
+class UserTweetResolver
+  def call(user_id)
+    # Return JSON reandly object
+  end
+end
+
+AsyncStorage[UserTweetResolver].get('123') # Return nil if there is no data
+AsyncStorage[UserTweetResolver].get!('123') # Await resolve
+
+class UserTweetResolver
+  def initialize(access_token:)
+    @access_token = access_token
+  end
+
+  def call(user_id)
+    # Return JSON reandly object
+  end
+end
+
+AsyncStorage[UserTweetResolver, access_token: '123'].get(9) # Return nil if there is no data
+```
+
+
+```ruby
+AsyncStorage::Set.new(UserTweetResolver).get('123)
+```
+
 
 ## Development
 
