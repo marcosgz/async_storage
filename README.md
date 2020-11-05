@@ -37,14 +37,6 @@ end
 Useful methods to get, set and check data
 
 ```ruby
-AsyncStorage.get(klass, 'arg')
-AsyncStorage.set(klass, 'arg') { value }
-AsyncStorage.delete(klass, 'arg')
-AsyncStorage.exist?(klass, 'arg')
-AsyncStorage.invalidate(klass, 'arg')
-```
-
-```ruby
 # app/resolvers/user_tweet_resolver.rb
 class UserTweetResolver
   def call(user_id)
@@ -52,25 +44,35 @@ class UserTweetResolver
   end
 end
 
-AsyncStorage[UserTweetResolver].get('123') # Return nil if there is no data
-AsyncStorage[UserTweetResolver].get!('123') # Await resolve
-
-class UserTweetResolver
-  def initialize(access_token:)
-    @access_token = access_token
-  end
-
-  def call(user_id)
-    # Return JSON reandly object
-  end
-end
-
-AsyncStorage[UserTweetResolver, access_token: '123'].get(9) # Return nil if there is no data
+AsyncStorage[UserTweetResolver].get('123') # Try to retrieve data. If does not exist enqueue a Background Job and return nil
+AsyncStorage[UserTweetResolver].get!('123') # Try to retrieve data. If does not exist imediate call the Resolver and return data
+AsyncStorage[UserTweetResolver, namespace: current_site.id].get(9) # Create a new Set using site id namepace
+AsyncStorage[UserTweetResolver, expires_in: 60].get(9) # Overwrite global expires_in
 ```
 
-
 ```ruby
-AsyncStorage::Set.new(UserTweetResolver).get('123)
+class Site
+  # site.cache.user_tweet.get(@user.id)
+  def cache
+    Cache.new(self.slug)
+  end
+
+  class Cache
+    RESOLVERS = {
+      user_tweet: UserTweetResolver,
+    }.freeze
+
+    RESOLVERS.each do |method, resolver|
+      define_method method do
+        AsyncStorage[resolver, namespace: @namespace]
+      end
+    end
+
+    def initialize(namespace)
+      @namespace = namespace
+    end
+  end
+end
 ```
 
 
