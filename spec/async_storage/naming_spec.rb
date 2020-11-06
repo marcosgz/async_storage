@@ -44,4 +44,17 @@ RSpec.describe AsyncStorage::Naming do
     expect(model.head).to eq("ns:async_storage:naming:#{digest}:h")
     expect(model.body).to eq("ns:async_storage:naming:#{digest}:b")
   end
+
+  describe '.eql?' do
+    specify do
+      model = described_class.new(DummyResolver, one:1)
+
+      expect(model).to eq(
+        described_class.new(DummyResolver, 'one' => 1)
+      )
+      expect(model).not_to eq(
+        described_class.new(DummyResolver, 'one' => '1')
+      )
+    end
+  end
 end

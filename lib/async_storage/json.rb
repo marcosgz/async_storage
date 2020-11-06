@@ -25,7 +25,7 @@ module AsyncStorage
     def dump(object, **options)
       object = as_json(object)
 
-      MultiJson.dump(object, options)
+      MultiJson.dump(object, **options)
     end
 
     def as_json(value)

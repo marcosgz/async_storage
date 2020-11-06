@@ -29,6 +29,21 @@ module AsyncStorage
       "#{base}:#{SET[:body]}"
     end
 
+    def to_s
+      format(
+        '#<AsyncStorage::Naming head=%<head>p body=%<body>p>',
+        head: head,
+        body: body,
+      )
+    end
+
+    def eql?(other)
+      return false unless other.is_a?(self.class)
+
+      [head, body] == [other.head, other.body]
+    end
+    alias == eql?
+
     protected
 
     def base
