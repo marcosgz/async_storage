@@ -40,6 +40,9 @@ module AsyncStorage
     # Namespace used to group group data stored by this package
     attribute_accessor :namespace, default: 'async_storage'
 
+    # The global TTL for the redis storage. Keep nil if you don't want to expire objects.
+    attribute_accessor :expires_in, default: nil
+
     def config_path=(value)
       @config_from_yaml = nil
       @config_path = value
@@ -61,6 +64,13 @@ module AsyncStorage
         value: value,
         attr: attribute,
       )
+    end
+
+    def normalize_expires_in(_attr, value)
+      ttl = value.to_i
+      return unless ttl > 0
+
+      ttl
     end
 
     def config_from_yaml

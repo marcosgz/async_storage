@@ -9,6 +9,33 @@ RSpec.describe AsyncStorage::Config do
     it { expect(config.redis).to eq(nil) }
     it { expect(config.namespace).to eq('async_storage') }
     it { expect(config.config_path).to eq(nil) }
+    it { expect(config.expires_in).to eq(nil) }
+  end
+
+  describe '.expires_in=' do
+    specify do
+      expect(config.expires_in).to eq(nil)
+      config.expires_in = 10
+      expect(config.expires_in).to eq(10)
+    end
+
+    specify do
+      expect(config.expires_in).to eq(nil)
+      config.expires_in = -1
+      expect(config.expires_in).to eq(nil)
+    end
+
+    specify do
+      expect(config.expires_in).to eq(nil)
+      config.expires_in = 0
+      expect(config.expires_in).to eq(nil)
+    end
+
+    specify do
+      expect(config.expires_in).to eq(nil)
+      config.expires_in = '60'
+      expect(config.expires_in).to eq(60)
+    end
   end
 
   describe '.namespace=' do
