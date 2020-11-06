@@ -13,4 +13,9 @@ RSpec.configure do |config|
   config.expect_with :rspec do |c|
     c.syntax = :expect
   end
+
+  def reset_config!
+    AsyncStorage.instance_variable_set(:@config, nil)
+    AsyncStorage.instance_variable_set(:@redis_pool, nil)
+  end
 end
