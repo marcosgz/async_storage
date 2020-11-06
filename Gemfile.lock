@@ -8,6 +8,7 @@ PATH
 GEM
   remote: https://rubygems.org/
   specs:
+    connection_pool (2.2.3)
     diff-lcs (1.4.4)
     multi_json (1.15.0)
     rake (12.3.3)
@@ -31,6 +32,7 @@ PLATFORMS
 
 DEPENDENCIES
   async_storage!
+  connection_pool
   rake (~> 12.0)
   rspec (~> 3.0)
 
