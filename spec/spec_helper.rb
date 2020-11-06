@@ -14,6 +14,10 @@ RSpec.configure do |config|
     c.syntax = :expect
   end
 
+  class DummyResolver
+    def call(*values); values; end
+  end
+
   def reset_config!
     AsyncStorage.instance_variable_set(:@config, nil)
     AsyncStorage.instance_variable_set(:@redis_pool, nil)
