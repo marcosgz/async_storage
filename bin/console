@@ -1,15 +1,16 @@
 #!/usr/bin/env ruby
-# frozen_string_literal: true
 
 require 'bundler/setup'
+require 'dotenv/load'
+require 'pry'
+require 'awesome_print'
 require 'async_storage'
+require 'connection_pool'
 
-# You can add fixtures and/or initialization code here to make experimenting
-# with your gem easier. You can also use a different console, if you like.
+AsyncStorage.configure do |config|
+  config.redis = ConnectionPool.new(size: 2, timeout: 0.5) do
+    Redis.new(url: ENV.fetch('REDIS_URL', 'redis://0.0.0.0:6379'))
+  end
+end
 
-# (If you use this, don't forget to add pry to your Gemfile!)
-# require "pry"
-# Pry.start
-
-require 'irb'
-IRB.start(__FILE__)
+Pry.start
