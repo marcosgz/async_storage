@@ -5,6 +5,7 @@ require 'async_storage/config'
 require 'async_storage/redis_pool'
 require 'async_storage/json'
 require 'async_storage/repo'
+require 'async_storage/bath_actions'
 
 module AsyncStorage
   class Error < StandardError; end

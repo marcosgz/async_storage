@@ -28,10 +28,18 @@ RSpec.describe AsyncStorage::Naming do
   end
 
   specify do
-    model = described_class.new(DummyResolver, one:1)
+    model = described_class.new(DummyResolver, { one:1 })
     digest = Digest::SHA256.hexdigest('[{"one":1}]')
     expect(model.head).to eq("ns:dummy_resolver:#{digest}:h")
     expect(model.body).to eq("ns:dummy_resolver:#{digest}:b")
+  end
+
+  specify do
+    model = described_class.new(DummyResolver, { 'one' => 1 })
+    model.prefix = 'test'
+    digest = Digest::SHA256.hexdigest('[{"one":1}]')
+    expect(model.head).to eq("ns:test:dummy_resolver:#{digest}:h")
+    expect(model.body).to eq("ns:test:dummy_resolver:#{digest}:b")
   end
 
   specify do
@@ -47,7 +55,7 @@ RSpec.describe AsyncStorage::Naming do
 
   describe '.eql?' do
     specify do
-      model = described_class.new(DummyResolver, one:1)
+      model = described_class.new(DummyResolver, { one:1 })
 
       expect(model).to eq(
         described_class.new(DummyResolver, 'one' => 1)

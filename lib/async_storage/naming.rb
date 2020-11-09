@@ -15,6 +15,7 @@ module AsyncStorage
     }.freeze
 
     attr_reader :class_name, :class_args
+    attr_accessor :prefix
 
     def initialize(klass, *args)
       @class_name = normalize_class(klass.name)
@@ -47,7 +48,7 @@ module AsyncStorage
     protected
 
     def base
-      "#{ns}:#{class_name}:#{class_args}"
+      [ns, prefix, class_name, class_args].compact.join(':')
     end
 
     def normalize_class(name)

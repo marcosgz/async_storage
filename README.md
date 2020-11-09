@@ -28,19 +28,20 @@ Define global configurations
 ```ruby
 # Configurations
 AsyncStorage.configuration do |config|
-  config.backend = AsyncStorage::Backend::Faktory
-  config.respository = AsyncStorage::Repository
-  config.expires_in = 3_600
+  config.namespace = 'async_storage'  # Default to 'async_storage'
+  config.expires_in = 3_600           # Default to nil
 end
 ```
+
 
 Useful methods to get, set and check data
 
 ```ruby
-# app/resolvers/user_tweet_resolver.rb
-class UserTweetResolver
+# app/resolvers/user_tweets_resolver.rb
+class UserTweetsResolver
   def call(user_id)
-    # Return JSON reandly object
+    # Return JSON friendly object
+    { 'user_id' => user_id, 'tweets' => Twitter::API.tweets(user_id).as_json }
   end
 end
 
@@ -52,14 +53,14 @@ AsyncStorage[UserTweetResolver, expires_in: 60].get(9) # Overwrite global expire
 
 ```ruby
 class Site
-  # site.cache.user_tweet.get(@user.id)
+  # site.cache.user_tweets.get(@user.id)
   def cache
     Cache.new(self.slug)
   end
 
   class Cache
     RESOLVERS = {
-      user_tweet: UserTweetResolver,
+      user_tweets: UserTweetsResolver,
     }.freeze
 
     RESOLVERS.each do |method, resolver|
@@ -74,7 +75,6 @@ class Site
   end
 end
 ```
-
 
 ## Development
 

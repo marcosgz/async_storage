@@ -11,6 +11,11 @@ AsyncStorage.configure do |config|
   config.redis = ConnectionPool.new(size: 2, timeout: 0.5) do
     Redis.new(url: ENV.fetch('REDIS_URL', 'redis://0.0.0.0:6379'))
   end
+  config.expires_in = 120
+end
+
+class DummyResolver
+  def call(*values); values; end
 end
 
 Pry.start
