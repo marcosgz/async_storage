@@ -28,11 +28,13 @@ Define global configurations
 ```ruby
 # Configurations
 AsyncStorage.configuration do |config|
+  config.redis = ConnectionPool.new(size: 10, timeout: 1) do
+    Redis.new(url: ENV.fetch('REDIS_URL', 'redis://0.0.0.0:6379'))
+  end
   config.namespace = 'async_storage'  # Default to 'async_storage'
   config.expires_in = 3_600           # Default to nil
 end
 ```
-
 
 Useful methods to get, set and check data
 

@@ -8,4 +8,4 @@
 /tmp/
 .rspec_status
 .env
-
+async_storage-*.gem
