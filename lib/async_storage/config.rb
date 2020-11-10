@@ -43,12 +43,33 @@ module AsyncStorage
     # The global TTL for the redis storage. Keep nil if you don't want to expire objects.
     attribute_accessor :expires_in, default: nil
 
+    # When enabled it automatically calls the resolver when there is an issue with RedisConnection
+    attribute_accessor :circuit_breaker, default: true, normalizer: :normalizer_boolean, validator: :validate_boolean
+    alias circuit_breaker? circuit_breaker
+
     def config_path=(value)
       @config_from_yaml = nil
       @config_path = value
     end
 
     private
+
+    def normalizer_boolean(_attr, value)
+      return true if [1, '1', true, 'true'].include?(value)
+      return false if [nil, 0, '0', false, 'false'].include?(value)
+
+      value
+    end
+
+    def validate_boolean(attribute, value)
+      return if [true, false].include?(value)
+
+      raise InvalidConfig, format(
+        "The value %<value>p for %<attr>s is not valid. It must be a boolean",
+        value: value,
+        attr: attribute,
+      )
+    end
 
     def normalize_namespace(_attribute, value)
       return value.to_s if value.is_a?(Symbol)

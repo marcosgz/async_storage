@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'async_storage/naming'
+require 'async_storage/circuit_breaker'
 
 module AsyncStorage
   class Allocator
@@ -31,19 +32,21 @@ module AsyncStorage
     #
     # @return [Object, NilClass] Return both stale or fresh object. If does not exist async call the retriever and return nil
     def get
-      connection do |redis|
-        raw_head = redis.get(naming.head)
-        case raw_head
-        when CTRL[:executed], CTRL[:enqueued]
-          read_body(redis) # Try to deliver stale content
-        when CTRL[:missing]
-          return update!(redis) unless async?
+      breaker.run(fallback: -> { fetch! }) do
+        connection do |redis|
+          raw_head = redis.get(naming.head)
+          case raw_head
+          when CTRL[:executed], CTRL[:enqueued]
+            read_body(redis) # Try to deliver stale content
+          when CTRL[:missing]
+            return update!(redis) unless async?
 
-          perform_async(redis) # Enqueue background job to resolve content
-          redis.set(naming.head, CTRL[:enqueued])
-          read_body(redis) # Try to deliver stale content
-        else
-          raise AsyncStorage::Error, format('the key %<k>s have an invalid value. Only "1" or "0" values are expected. And we got %<v>p', v: raw_head, k: naming.head)
+            perform_async(redis) # Enqueue background job to resolve content
+            redis.set(naming.head, CTRL[:enqueued])
+            read_body(redis) # Try to deliver stale content
+          else
+            raise AsyncStorage::Error, format('the key %<k>s have an invalid value. Only "1" or "0" values are expected. And we got %<v>p', v: raw_head, k: naming.head)
+          end
         end
       end
     end
@@ -52,17 +55,19 @@ module AsyncStorage
     #
     # @return [Object] Return the result from resolver
     def get!
-      connection do |redis|
-        raw_head = redis.get(naming.head)
-        case raw_head
-        when CTRL[:executed]
-          read_body(redis) || begin
-            update!(redis) unless redis.exists?(naming.body)
+      breaker.run(fallback: -> { fetch! }) do
+        connection do |redis|
+          raw_head = redis.get(naming.head)
+          case raw_head
+          when CTRL[:executed]
+            read_body(redis) || begin
+              update!(redis) unless redis.exists?(naming.body)
+            end
+          when CTRL[:missing], CTRL[:enqueued]
+            update!(redis)
+          else
+            raise AsyncStorage::Error, format('the key %<k>s have an invalid value. Only "1" or "0" values are expected. And we got %<v>p', v: raw_head, k: naming.head)
           end
-        when CTRL[:missing], CTRL[:enqueued]
-          update!(redis)
-        else
-          raise AsyncStorage::Error, format('the key %<k>s have an invalid value. Only "1" or "0" values are expected. And we got %<v>p', v: raw_head, k: naming.head)
         end
       end
     end
@@ -71,8 +76,10 @@ module AsyncStorage
     #
     # @return [Boolean] True or False according to the object existence
     def invalidate
-      connection do |redis|
-        redis.del(naming.head) == 1
+      breaker.run(fallback: -> { false }) do
+        connection do |redis|
+          redis.del(naming.head) == 1
+        end
       end
     end
 
@@ -80,11 +87,13 @@ module AsyncStorage
     #
     # @return [Boolean] True or False according to the object existence
     def invalidate!
-      connection do |redis|
-        redis.multi do |cli|
-          cli.del(naming.body)
-          cli.del(naming.head)
-        end.include?(1)
+      breaker.run(fallback: -> { false }) do
+        connection do |redis|
+          redis.multi do |cli|
+            cli.del(naming.body)
+            cli.del(naming.head)
+          end.include?(1)
+        end
       end
     end
 
@@ -92,37 +101,45 @@ module AsyncStorage
     #
     # @return [Object, NilClass] Stale object or nil when it does not exist
     def refresh
-      value = get(*@args)
-      invalidate(*@args)
-      value
+      breaker.run(fallback: -> { fetch! }) do
+        get.tap { invalidate }
+      end
     end
 
     # Fetch data from resolver and store it into redis
     #
     # @return [Object] Return the result from resolver
     def refresh!
-      connection { |redis| update!(redis) }
+      breaker.run(fallback: -> { fetch! }) do
+        connection { |redis| update!(redis) }
+      end
     end
 
     # Check if a fresh value exist.
     #
     # @return [Boolean] True or False according the object existence
     def exist?
-      connection { |redis| redis.exists?(naming.head) && redis.exists?(naming.body) }
+      breaker.run(fallback: -> { false }) do
+        connection { |redis| redis.exists?(naming.head) && redis.exists?(naming.body) }
+      end
     end
 
     # Check if object with a given key is stale
     #
     # @return [NilClass, Boolean] Return nil if the object does not exist or true/false according to the object freshness state
     def stale?
-      connection { |redis| redis.exists?(naming.body) && redis.ttl(naming.head) < 0 }
+      breaker.run(fallback: -> { false }) do
+        connection { |redis| redis.exists?(naming.body) && redis.ttl(naming.head) < 0 }
+      end
     end
 
     # Check if a fresh object exists into the storage
     #
     # @return [Boolean] true/false according to the object existence and freshness
     def fresh?
-      connection { |redis| redis.exists?(naming.body) && redis.ttl(naming.head) > 0 }
+      breaker.run(fallback: -> { false }) do
+        connection { |redis| redis.exists?(naming.body) && redis.ttl(naming.head) > 0 }
+      end
     end
 
     private
@@ -138,7 +155,7 @@ module AsyncStorage
     end
 
     def update!(redis)
-      payload = resolver_class.new.(*@args)
+      payload = fetch!
 
       json = AsyncStorage::JSON.dump(payload, mode: :compat)
       redis.multi do |cli|
@@ -147,6 +164,10 @@ module AsyncStorage
         cli.expire(naming.head, expires_in) if expires_in
       end
       AsyncStorage::JSON.load(json)
+    end
+
+    def fetch!
+      resolver_class.new.(*@args)
     end
 
     def read_body(redis)
@@ -160,6 +181,10 @@ module AsyncStorage
       return unless block_given?
 
       AsyncStorage.redis_pool.with { |redis| yield(redis) }
+    end
+
+    def breaker
+      CircuitBreaker.new(self, exceptions: [Redis::BaseConnectionError])
     end
   end
 end

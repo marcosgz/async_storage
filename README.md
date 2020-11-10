@@ -33,6 +33,7 @@ AsyncStorage.configuration do |config|
   end
   config.namespace = 'async_storage'  # Default to 'async_storage'
   config.expires_in = 3_600           # Default to nil
+  config.circuit_breaker = true       # Call the resolver instead of thrown redis connection error when the redis service is down. Default to true
 end
 ```
 

@@ -10,6 +10,40 @@ RSpec.describe AsyncStorage::Config do
     it { expect(config.namespace).to eq('async_storage') }
     it { expect(config.config_path).to eq(nil) }
     it { expect(config.expires_in).to eq(nil) }
+    it { expect(config.circuit_breaker).to eq(true) }
+    it { expect(config.circuit_breaker?).to eq(true) }
+  end
+
+  describe '.circuit_breaker=' do
+    specify do
+      expect(config.circuit_breaker).to eq(true)
+      config.circuit_breaker = false
+      expect(config.circuit_breaker).to eq(false)
+    end
+
+    specify do
+      expect(config.circuit_breaker).to eq(true)
+      config.circuit_breaker = 'false'
+      expect(config.circuit_breaker).to eq(false)
+      config.circuit_breaker = 'true'
+      expect(config.circuit_breaker).to eq(true)
+    end
+
+    specify do
+      expect(config.circuit_breaker).to eq(true)
+      config.circuit_breaker = '0'
+      expect(config.circuit_breaker).to eq(false)
+      config.circuit_breaker = '1'
+      expect(config.circuit_breaker).to eq(true)
+    end
+
+    specify do
+      msg = -> (v) { "The value #{v.inspect} for circuit_breaker is not valid. It must be a boolean" }
+      expect { config.circuit_breaker = '' }.to raise_error(AsyncStorage::InvalidConfig, msg.(''))
+      expect { config.circuit_breaker = 'yes' }.to raise_error(AsyncStorage::InvalidConfig, msg.('yes'))
+      expect { config.circuit_breaker = :false }.to raise_error(AsyncStorage::InvalidConfig, msg.(:false))
+      expect { config.circuit_breaker = :true }.to raise_error(AsyncStorage::InvalidConfig, msg.(:true))
+    end
   end
 
   describe '.expires_in=' do
