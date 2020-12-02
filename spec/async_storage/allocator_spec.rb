@@ -49,7 +49,7 @@ RSpec.describe AsyncStorage::Allocator do
 
         naming = alloc.naming
         pool do |r|
-          expect(r.get(naming.head)).to eq('1')
+          expect(r.get(naming.head)).to eq(AsyncStorage::Allocator::CTRL.fetch(:executed))
           expect(r.ttl(naming.head)).to eq(opts[:expires_in])
           expect(r.get(naming.body)).to eq('"ok"')
           expect(r.ttl(naming.body)).to eq(-1)
@@ -64,7 +64,7 @@ RSpec.describe AsyncStorage::Allocator do
 
         naming = alloc.naming
         pool do |r|
-          expect(r.get(naming.head)).to eq('1')
+          expect(r.get(naming.head)).to eq(AsyncStorage::Allocator::CTRL.fetch(:executed))
           expect(r.ttl(naming.head)).to eq(opts[:expires_in])
           expect(r.get(naming.body)).to eq('null')
           expect(r.ttl(naming.body)).to eq(-1)
@@ -75,7 +75,7 @@ RSpec.describe AsyncStorage::Allocator do
         naming = AsyncStorage::Naming.new(DummyResolver)
         naming.prefix = ns
         pool do |r|
-          r.set(naming.head, '1')
+          r.set(naming.head, AsyncStorage::Allocator::CTRL.fetch(:executed))
           r.set(naming.body, '{"state":"executed"}')
         end
         expect(described_class.new(repo).get).to eq({'state' => 'executed'})
@@ -85,7 +85,7 @@ RSpec.describe AsyncStorage::Allocator do
         naming = AsyncStorage::Naming.new(DummyResolver)
         naming.prefix = ns
         pool do |r|
-          r.set(naming.head, '0')
+          r.set(naming.head, AsyncStorage::Allocator::CTRL.fetch(:enqueued))
           r.set(naming.body, '{"state":"enqueued"}')
         end
         expect(described_class.new(repo).get).to eq({'state' => 'enqueued'})
@@ -95,7 +95,7 @@ RSpec.describe AsyncStorage::Allocator do
         naming = AsyncStorage::Naming.new(DummyResolver)
         naming.prefix = ns
         pool do |r|
-          r.set(naming.head, '1')
+          r.set(naming.head, AsyncStorage::Allocator::CTRL.fetch(:executed))
           r.del(naming.body)
         end
         expect(described_class.new(repo).get).to eq(nil)
@@ -105,7 +105,7 @@ RSpec.describe AsyncStorage::Allocator do
         naming = AsyncStorage::Naming.new(DummyResolver)
         naming.prefix = ns
         pool do |r|
-          r.set(naming.head, '0')
+          r.set(naming.head, AsyncStorage::Allocator::CTRL.fetch(:enqueued))
           r.del(naming.body)
         end
         expect(described_class.new(repo).get).to eq(nil)
@@ -142,7 +142,7 @@ RSpec.describe AsyncStorage::Allocator do
 
         naming = alloc.naming
         pool do |r|
-          expect(r.get(naming.head)).to eq('1')
+          expect(r.get(naming.head)).to eq(AsyncStorage::Allocator::CTRL.fetch(:executed))
           expect(r.ttl(naming.head)).to eq(opts[:expires_in])
           expect(r.get(naming.body)).to eq('["ok"]')
           expect(r.ttl(naming.body)).to eq(-1)
@@ -157,7 +157,7 @@ RSpec.describe AsyncStorage::Allocator do
 
         naming = alloc.naming
         pool do |r|
-          expect(r.get(naming.head)).to eq('1')
+          expect(r.get(naming.head)).to eq(AsyncStorage::Allocator::CTRL.fetch(:executed))
           expect(r.ttl(naming.head)).to eq(opts[:expires_in])
           expect(r.get(naming.body)).to eq('null')
           expect(r.ttl(naming.body)).to eq(-1)
@@ -168,7 +168,7 @@ RSpec.describe AsyncStorage::Allocator do
         naming = AsyncStorage::Naming.new(DummyResolver)
         naming.prefix = ns
         pool do |r|
-          r.set(naming.head, '1')
+          r.set(naming.head, AsyncStorage::Allocator::CTRL.fetch(:executed))
           r.set(naming.body, '{"state":"executed"}')
         end
         expect(described_class.new(repo).get!()).to eq({'state' => 'executed'})
@@ -178,7 +178,7 @@ RSpec.describe AsyncStorage::Allocator do
         naming = AsyncStorage::Naming.new(DummyResolver)
         naming.prefix = ns
         pool do |r|
-          r.set(naming.head, '1')
+          r.set(naming.head, AsyncStorage::Allocator::CTRL.fetch(:executed))
           r.set(naming.body, 'null')
         end
         expect(described_class.new(repo).get!()).to eq(nil)
@@ -189,7 +189,7 @@ RSpec.describe AsyncStorage::Allocator do
         naming = AsyncStorage::Naming.new(DummyResolver)
         naming.prefix = ns
         pool do |r|
-          r.set(naming.head, '0')
+          r.set(naming.head, AsyncStorage::Allocator::CTRL.fetch(:enqueued))
           r.set(naming.body, '{"state":"enqueued"}')
         end
         expect(described_class.new(repo).get!()).to eq({'state' => 'executed'})
@@ -211,7 +211,7 @@ RSpec.describe AsyncStorage::Allocator do
         naming = AsyncStorage::Naming.new(DummyResolver)
         naming.prefix = ns
         pool do |r|
-          r.set(naming.head, '1')
+          r.set(naming.head, AsyncStorage::Allocator::CTRL.fetch(:executed))
           r.del(naming.body)
         end
         expect(described_class.new(repo).get!()).to eq('state' => 'fresh')
@@ -260,7 +260,7 @@ RSpec.describe AsyncStorage::Allocator do
       naming = AsyncStorage::Naming.new(DummyResolver)
       naming.prefix = ns
       pool do |r|
-        r.set(naming.head, '1')
+        r.set(naming.head, AsyncStorage::Allocator::CTRL.fetch(:executed))
         r.expire(naming.head, opts[:expires_in])
         r.set(naming.body, 'null')
       end
@@ -300,7 +300,7 @@ RSpec.describe AsyncStorage::Allocator do
       naming = AsyncStorage::Naming.new(DummyResolver)
       naming.prefix = ns
       pool do |r|
-        r.set(naming.head, '1')
+        r.set(naming.head, AsyncStorage::Allocator::CTRL.fetch(:executed))
         r.expire(naming.head, opts[:expires_in])
         r.set(naming.body, 'null')
       end
@@ -323,7 +323,7 @@ RSpec.describe AsyncStorage::Allocator do
       naming = AsyncStorage::Naming.new(DummyResolver)
       naming.prefix = ns
       pool do |r|
-        r.set(naming.head, '1')
+        r.set(naming.head, AsyncStorage::Allocator::CTRL.fetch(:executed))
         r.expire(naming.head, opts[:expires_in])
         r.set(naming.body, '"stale"')
       end
@@ -352,7 +352,7 @@ RSpec.describe AsyncStorage::Allocator do
       naming = AsyncStorage::Naming.new(DummyResolver)
       naming.prefix = ns
       pool do |r|
-        r.set(naming.head, '1')
+        r.set(naming.head, AsyncStorage::Allocator::CTRL.fetch(:executed))
         r.expire(naming.head, opts[:expires_in])
         r.set(naming.body, '"stale"')
       end
@@ -380,7 +380,7 @@ RSpec.describe AsyncStorage::Allocator do
       naming = AsyncStorage::Naming.new(DummyResolver)
       naming.prefix = ns
       pool do |r|
-        r.set(naming.head, '1')
+        r.set(naming.head, AsyncStorage::Allocator::CTRL.fetch(:executed))
         r.set(naming.body, '1')
       end
       expect(described_class.new(repo).exist?).to eq(true)
@@ -400,7 +400,7 @@ RSpec.describe AsyncStorage::Allocator do
       naming = AsyncStorage::Naming.new(DummyResolver)
       naming.prefix = ns
       pool do |r|
-        r.set(naming.head, '1')
+        r.set(naming.head, AsyncStorage::Allocator::CTRL.fetch(:executed))
         r.del(naming.body)
       end
       expect(described_class.new(repo).exist?).to eq(false)

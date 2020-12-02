@@ -7,7 +7,8 @@ module AsyncStorage
   class Allocator
     CTRL = {
       enqueued: '0',
-      executed: '1',
+      resolving: '1',
+      executed: '2',
       missing: nil,
     }.freeze
 

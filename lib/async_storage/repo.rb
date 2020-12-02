@@ -4,12 +4,6 @@ require 'async_storage/allocator'
 
 module AsyncStorage
   class Repo
-    CTRL = {
-      enqueued: '0',
-      executed: '1',
-      missing: nil,
-    }.freeze
-
     attr_reader :resolver_class
 
     # @param resolver_class [Class] A class with the call method
