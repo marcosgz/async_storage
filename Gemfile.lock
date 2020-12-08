@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    async_storage (0.0.3)
+    async_storage (0.0.4)
       multi_json (> 0.0.0)
       redis (> 0.0.0)
 

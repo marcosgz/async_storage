@@ -9,6 +9,7 @@ module AsyncStorage
     include Util::Strings
 
     SET = {
+      temp: 't',
       head: 'h',
       body: 'b',
       none: '_null_',
@@ -20,6 +21,10 @@ module AsyncStorage
     def initialize(klass, *args)
       @class_name = normalize_class(klass.name)
       @class_args = normalize_args(args)
+    end
+
+    def temp
+      "#{base}:#{SET[:temp]}"
     end
 
     def head

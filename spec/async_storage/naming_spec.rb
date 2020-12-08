@@ -11,6 +11,7 @@ RSpec.describe AsyncStorage::Naming do
     model = described_class.new(DummyResolver)
     expect(model.head).to eq('ns:dummy_resolver:_null_:h')
     expect(model.body).to eq('ns:dummy_resolver:_null_:b')
+    expect(model.temp).to eq('ns:dummy_resolver:_null_:t')
   end
 
   specify do
@@ -18,6 +19,7 @@ RSpec.describe AsyncStorage::Naming do
     digest = Digest::SHA256.hexdigest('[1]')
     expect(model.head).to eq("ns:dummy_resolver:#{digest}:h")
     expect(model.body).to eq("ns:dummy_resolver:#{digest}:b")
+    expect(model.temp).to eq("ns:dummy_resolver:#{digest}:t")
   end
 
   specify do
@@ -25,6 +27,7 @@ RSpec.describe AsyncStorage::Naming do
     digest = Digest::SHA256.hexdigest('[[1,2]]')
     expect(model.head).to eq("ns:dummy_resolver:#{digest}:h")
     expect(model.body).to eq("ns:dummy_resolver:#{digest}:b")
+    expect(model.temp).to eq("ns:dummy_resolver:#{digest}:t")
   end
 
   specify do
@@ -32,6 +35,7 @@ RSpec.describe AsyncStorage::Naming do
     digest = Digest::SHA256.hexdigest('[{"one":1}]')
     expect(model.head).to eq("ns:dummy_resolver:#{digest}:h")
     expect(model.body).to eq("ns:dummy_resolver:#{digest}:b")
+    expect(model.temp).to eq("ns:dummy_resolver:#{digest}:t")
   end
 
   specify do
@@ -40,6 +44,7 @@ RSpec.describe AsyncStorage::Naming do
     digest = Digest::SHA256.hexdigest('[{"one":1}]')
     expect(model.head).to eq("ns:test:dummy_resolver:#{digest}:h")
     expect(model.body).to eq("ns:test:dummy_resolver:#{digest}:b")
+    expect(model.temp).to eq("ns:test:dummy_resolver:#{digest}:t")
   end
 
   specify do
@@ -51,6 +56,7 @@ RSpec.describe AsyncStorage::Naming do
     digest = Digest::SHA256.hexdigest('[1]')
     expect(model.head).to eq("ns:async_storage:naming:#{digest}:h")
     expect(model.body).to eq("ns:async_storage:naming:#{digest}:b")
+    expect(model.temp).to eq("ns:async_storage:naming:#{digest}:t")
   end
 
   describe '.eql?' do
